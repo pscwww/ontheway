@@ -1,0 +1,15 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/app/build
+/captures
+.externalNativeBuild
+.cxx
+
+# 중계 서버가 저장하는 데모 데이터
+/relay/data.json
+# 작업용 스크린샷
+/*.png

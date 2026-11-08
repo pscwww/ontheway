@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#EDF0F3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B0E14" media="(prefers-color-scheme: dark)">
+<title>오는 길에 (가족 화면)</title>
+<meta name="description" content="운전자의 도착 시각을 보고, 배달 주문 알림을 받고, 오는 길에 살 것을 부탁하는 가족용 화면">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<style>
+/* Hallmark · v2.0.0 · shape: app screen · scope: app · redesign: restyle · theme: Wayfind (by request) · wayfind: platform, night · genre: modern-minimal · posture: committed */
+/* critique: 가족이 폰으로 '언제 주문할지'와 '부탁 보내기'만 하는 도구 화면. 역 안내판처럼 시각과 분을 판 위에 크게, 나머지는 테두리로 길을 낸다. */
+/* 테마 조정: Wayfind의 코발트(라이브·주요 동작) 자리에 차 앱과 같은 청록을, 판 위 숫자에는 차 앱과 같은 주황을 쓴다. 빨강은 오류·자동 거절에만. */
+@font-face{font-family:"Chivo Mono";src:url(fonts/ChivoMono.woff) format("woff");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Nanum Gothic Coding";src:local("NanumGothicCoding"),url(fonts/NanumGothicCoding-Regular.ko.woff) format("woff");font-weight:400 500;font-display:swap}
+@font-face{font-family:"Nanum Gothic Coding";src:local("NanumGothicCoding-Bold"),url(fonts/NanumGothicCoding-Bold.ko.woff) format("woff");font-weight:600 900;font-display:swap}
+:root{
+  color-scheme:light;
+  --font:"Chivo Mono","Nanum Gothic Coding",ui-monospace,monospace;
+  --bg:oklch(95.5% 0.006 250); --paper-2:oklch(91% 0.009 250); --card:oklch(99.5% 0.005 250);
+  --ink:oklch(16% 0.014 262); --sub:oklch(45% 0.016 260); --line:oklch(80% 0.011 250); --soft:oklch(91% 0.009 250);
+  --border:oklch(16% 0.014 262); --field-line:oklch(16% 0.014 262);
+  --plate:oklch(16% 0.014 262); --on-plate:oklch(96% 0.005 250); --on-plate-sub:oklch(78% 0.012 250); --plate-rule:oklch(34% 0.014 262);
+  --amber:#FFB547; --on-amber:oklch(16% 0.014 262); --amber-ink:oklch(16% 0.014 262); --amber-soft:#FFB547;
+  --teal:#0F7F72; --on-teal:#FFFFFF; --teal-ink:#0B5E54; --teal-soft:oklch(91% 0.009 250);
+  --coral:#C2410C; --coral-ink:#8A2A10; --coral-soft:oklch(91% 0.009 250);
+  --btn:oklch(16% 0.014 262); --on-btn:oklch(96% 0.005 250); --focus:#0F7F72;
+  --map-bg:oklch(91% 0.009 250); --map-road:oklch(80% 0.011 250); --map-ink:oklch(16% 0.014 262); --map-start:oklch(47% 0.016 260); --pin-ring:oklch(99.5% 0.005 250); --cand:#0F7F72;
+  --rule-bar:2px; --rule-hair:1px;
+  --dur-micro:120ms;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    color-scheme:dark;
+    --bg:oklch(15% 0.012 262); --paper-2:oklch(20% 0.013 262); --card:oklch(18% 0.012 262);
+    --ink:oklch(96% 0.005 250); --sub:oklch(74% 0.012 250); --line:oklch(31% 0.014 262); --soft:oklch(22% 0.013 262);
+    --border:oklch(62% 0.012 255); --field-line:oklch(62% 0.012 255);
+    --plate:oklch(9% 0.012 262); --on-plate:oklch(96% 0.005 250); --on-plate-sub:oklch(74% 0.012 250); --plate-rule:oklch(62% 0.012 255);
+    --on-amber:oklch(16% 0.014 262); --amber-ink:oklch(16% 0.014 262);
+    --teal:#4FD8C6; --on-teal:#06201D; --teal-ink:#8BE8DB; --teal-soft:oklch(22% 0.013 262);
+    --coral:#FF9B7A; --coral-ink:#FFC2AE; --coral-soft:oklch(22% 0.013 262);
+    --btn:oklch(96% 0.005 250); --on-btn:oklch(15% 0.012 262); --focus:#FFB547;
+    --map-bg:oklch(20% 0.013 262); --map-road:oklch(34% 0.014 262); --map-ink:oklch(96% 0.005 250); --map-start:oklch(74% 0.012 250); --pin-ring:oklch(18% 0.012 262); --cand:#4FD8C6;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;overflow-x:clip;background:var(--bg);color:var(--ink);font-family:var(--font);font-variant-numeric:tabular-nums;-webkit-text-size-adjust:100%}
+body{padding:0 16px calc(32px + env(safe-area-inset-bottom));line-height:1.55}
+main{max-width:520px;margin:0 auto}
+::selection{background:var(--amber);color:var(--on-amber)}
+header{display:flex;align-items:center;gap:12px;padding:20px 0 16px;border-bottom:var(--rule-bar) solid var(--border);margin-bottom:16px}
+header img{width:44px;height:44px}
+header h1{text-wrap:balance;font-size:22px;margin:0;font-weight:800;letter-spacing:-.03em;line-height:1}
+header p{margin:4px 0 0;color:var(--sub);font-size:13px;font-weight:500}
+.conn{margin-left:auto;font-size:12px;font-weight:500;color:var(--sub);white-space:nowrap}
+.card{background:var(--card);color:var(--ink);border:var(--rule-bar) solid var(--border);padding:20px;margin:0 0 16px}
+.card h2{text-wrap:balance;font-size:17px;font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:0 0 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tag{font-size:12px;font-weight:500;letter-spacing:0;border-radius:999px;padding:4px 12px;border:var(--rule-bar) solid var(--line);color:var(--sub);white-space:nowrap;line-height:1.2}
+.tag.amber{background:var(--amber);border-color:var(--amber);color:var(--on-amber)}
+.tag.teal{border-color:var(--teal);color:var(--teal)}
+.tag.coral{border-color:var(--coral);color:var(--coral)}
+.tag.green{background:var(--btn);border-color:var(--btn);color:var(--on-btn)}
+.big{font-size:34px;font-weight:800;letter-spacing:-.03em;line-height:1}
+.fig{font-size:24px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.sub{color:var(--sub);font-size:14px;line-height:1.5}
+.row{display:flex;gap:12px;align-items:center}
+.grow{flex:1;min-width:0}
+/* 판: 역 안내판처럼 시각 하나를 담는 검은 칸. 숫자는 주황 */
+.plate{background:var(--plate);color:var(--on-plate);border:var(--rule-bar) solid var(--plate-rule);padding:16px}
+.plate .sub{color:var(--on-plate-sub)}
+.plate .big,.plate .fig{color:var(--amber)}
+.plate .big{font-size:28px;text-wrap:balance}
+.prog{margin:16px 0 4px}
+.prog .bar{position:relative;height:12px;background:var(--card);border:var(--rule-bar) solid var(--border);overflow:hidden}
+.prog .bar i{position:absolute;inset:0;background:var(--amber);transform-origin:left center;transform:scaleX(0);transition:transform .6s ease}
+.prog .ends{display:flex;justify-content:space-between;font-size:12px;font-weight:500;color:var(--sub);margin-top:8px}
+.map{width:100%;height:auto;display:block;background:var(--map-bg);border:var(--rule-bar) solid var(--border);margin:12px 0 4px}
+label{display:block;font-size:13px;font-weight:500;color:var(--sub);margin:12px 0 8px}
+input,select{width:100%;min-height:48px;font:inherit;font-size:16px;padding:12px;border:var(--rule-bar) solid var(--field-line);border-radius:0;background:var(--card);color:var(--ink)}
+input[aria-invalid="true"]{border-color:var(--coral)}
+.err{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--coral);margin-top:8px;font-weight:700}
+.err svg{flex:none}
+button{font:inherit;font-size:16px;font-weight:800;letter-spacing:-.01em;border:var(--rule-bar) solid var(--btn);border-radius:0;min-height:52px;padding:12px 16px;cursor:pointer;background:var(--btn);color:var(--on-btn);width:100%;transition:background-color var(--dur-micro) steps(1),color var(--dur-micro) steps(1)}
+button:active:not(:disabled){transform:translateY(1px)}
+button.amber{background:var(--amber);border-color:var(--on-amber);color:var(--on-amber)}
+button.teal{background:var(--teal);border-color:var(--teal);color:var(--on-teal)}
+button.ghost{background:transparent;color:var(--ink);border-color:var(--border)}
+button.small{width:auto;min-height:44px;padding:8px 16px;font-size:14px}
+button:disabled{opacity:.45;cursor:not-allowed}
+button[aria-busy="true"]{opacity:.7;cursor:progress}
+:focus{outline:none}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:0}
+/* 가게 고르기: 테두리를 나눠 쓰는 네모 칸. 고른 칸은 검게 채운다 */
+.stores{display:flex;flex-direction:column;margin-top:8px;max-height:320px;overflow:auto;padding:4px}
+.store{display:flex;align-items:center;gap:12px;min-height:60px;padding:12px;border:var(--rule-bar) solid var(--border);border-radius:0;margin-top:calc(-1 * var(--rule-bar));background:var(--card);color:var(--ink);font-weight:400;text-align:left;min-width:0}
+.store:first-child{margin-top:0}
+.store{flex:none}
+.store .chk{flex:none;width:22px;height:22px;border:var(--rule-bar) solid currentColor;display:grid;place-items:center}
+.store.sel{background:var(--plate);color:var(--on-plate);border-color:var(--plate)}
+.store.sel small,.store.sel .plus small{color:var(--on-plate-sub)}
+.store.sel .chk{background:var(--amber);border-color:var(--amber)}
+.store.sel .chk svg{stroke:var(--on-amber)}
+.store.sel .plus{color:var(--amber)}
+.store b{font-size:15px;font-weight:700} .store small{color:var(--sub);display:block;font-size:12px;margin-top:4px}
+.plus{margin-left:auto;font-weight:800;color:var(--teal);white-space:nowrap;text-align:right}
+.plus small{display:block;font-weight:500;font-size:11px;color:var(--sub)}
+.store.far{cursor:not-allowed;background:transparent;color:var(--sub);border-style:dashed;border-color:var(--line)} .store.far .plus{color:var(--coral)}
+.store.far .chk{border-style:dashed}
+.errand{border-top:var(--rule-hair) solid var(--line);padding:12px 0 4px}
+.errand:first-child{border-top:0;padding-top:0}
+/* 주문할 때: 카드 전체를 주황 판으로 (깜빡임 없이, 소리·진동이 알림 역할) */
+.card.alert{background:var(--amber);color:var(--on-amber);border-color:var(--on-amber)}
+.card.alert .sub,.card.alert .note{color:var(--on-amber)}
+.card.alert .tag{border-color:var(--on-amber);color:var(--on-amber)}
+.card.alert button.amber{background:var(--on-amber);color:var(--amber);border-color:var(--on-amber)}
+.times{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:4px 0 12px;background:var(--plate);border:var(--rule-bar) solid var(--plate-rule)}
+.times div{padding:12px;color:var(--on-plate)}
+.times div+div{border-left:var(--rule-hair) solid var(--plate-rule)}
+.times span{display:block;font-size:12px;font-weight:500;color:var(--on-plate-sub)} .times b{font-size:20px;font-weight:800;color:var(--amber)}
+.note{font-size:13px;color:var(--sub);margin-top:12px;line-height:1.5}
+.hidden{display:none!important}
+.banner{font-size:13px;background:var(--paper-2);border:var(--rule-bar) solid var(--border);padding:12px;color:var(--ink);margin-bottom:16px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--plate);color:var(--on-plate);border:var(--rule-bar) solid var(--plate-rule);padding:12px 20px;font-size:14px;font-weight:500;opacity:0;transition:opacity var(--dur-micro) steps(1);pointer-events:none;max-width:90%;z-index:9}
+.toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="icon.svg" alt="">
+    <div><h1>오는 길에</h1><p>운전자 도착에 맞춰요</p></div>
+    <div class="conn" role="status" aria-live="polite"><span id="connText">연결 중</span></div>
+  </header>
+
+  <div id="notifyBanner" class="banner row">
+    <span class="grow">주문할 때가 되면 소리와 진동으로 알려드려요.</span>
+    <button id="enableAlerts" class="small amber">알림 켜기</button>
+  </div>
+
+  <!-- 운전자 상태 -->
+  <section class="card">
+    <h2>운전자 <span id="tripTag" class="tag">출발 전</span></h2>
+    <div id="tripEmpty" class="sub">운전자가 내비 목적지를 정하고 출발하면 여기에 도착 시각이 떠요.</div>
+    <div id="tripBody" class="hidden">
+      <div class="row plate">
+        <div class="grow">
+          <div class="sub" id="destLine"></div>
+          <div class="big" id="arrival"></div>
+        </div>
+        <div style="text-align:right">
+          <div class="sub">남은 시간</div>
+          <div class="fig" id="remain">--</div>
+        </div>
+      </div>
+      <div class="prog">
+        <div class="bar" id="progBar" role="progressbar" aria-label="운행 진행" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="progFill"></i></div>
+        <div class="ends"><span id="progFrom">출발</span><span id="progTo">도착</span></div>
+      </div>
+      <svg id="map" class="map" viewBox="0 0 360 210" role="img" aria-label="출발지, 현재 위치, 목적지와 경로"></svg>
+      <div class="note" id="mapNote"></div>
+    </div>
+  </section>
+
+  <!-- ① 배달 타이밍 -->
+  <section class="card" id="orderCard">
+    <h2>① 배달 타이밍 <span id="orderTag" class="tag">설정 전</span></h2>
+
+    <div id="orderForm">
+      <div class="sub">시킬 메뉴를 적어 두면, 운전자 도착에 딱 맞는 순간에 "지금 주문하세요"라고 알려드려요. 주문은 평소 쓰는 배달앱으로 하시면 돼요.</div>
+      <label for="menu">메뉴</label><input id="menu" placeholder="예: 김치찌개 2인" autocomplete="off" aria-describedby="menuErr">
+      <div id="menuErr" class="err hidden" role="alert"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 7v6M12 17h.01"/></svg>메뉴를 적어 주세요</div>
+      <label for="shop">가게</label><input id="shop" placeholder="예: 동네 찌개집" autocomplete="off">
+      <div class="row">
+        <div class="grow"><label for="dmin">보통 걸리는 시간(분)</label><input id="dmin" type="number" inputmode="numeric" min="5" max="120" value="40"></div>
+        <div class="grow"><label for="bmin">운전자가 먼저 올 여유(분)</label><input id="bmin" type="number" inputmode="numeric" min="0" max="20" value="3"></div>
+      </div>
+      <div class="note" id="learnedNote"></div>
+      <div style="height:12px"></div>
+      <button id="savePlan" class="amber">도착에 맞춰 알려주세요</button>
+    </div>
+
+    <div id="orderPlanned" class="hidden">
+      <div class="sub" id="planLine"></div>
+      <div class="plate" style="margin-top:12px">
+        <div class="big" id="alertAt"></div>
+        <div class="sub" id="alertIn" style="margin-top:8px"></div>
+      </div>
+      <div class="note">운전자가 정체를 만나거나 어디를 들르면 알림 시각도 자동으로 바뀌어요.</div>
+      <div style="height:12px"></div>
+      <button id="cancelPlan" class="ghost">취소</button>
+    </div>
+
+    <div id="orderAlert" class="hidden">
+      <div class="big">지금 주문하세요!</div>
+      <div class="sub" id="alertWhy" style="margin:8px 0 16px"></div>
+      <button id="ordered" class="amber">주문했어요</button>
+      <div class="note">평소 쓰는 배달앱에서 <b id="alertMenu"></b>을(를) 주문한 뒤 눌러 주세요.</div>
+    </div>
+
+    <div id="orderOrdered" class="hidden">
+      <div class="times">
+        <div><span>주문</span><b id="tOrdered"></b></div>
+        <div><span>운전자 도착</span><b id="tDriver"></b></div>
+        <div><span>음식 도착</span><b id="tFood"></b></div>
+      </div>
+      <div class="sub" id="lateLine"></div>
+      <div style="height:12px"></div>
+      <button id="foodArrived" class="teal">음식 도착했어요</button>
+      <div class="note">눌러 주시면 실제 걸린 시간을 기록해서 다음엔 더 정확하게 맞춰요.</div>
+    </div>
+
+    <div id="orderDone" class="hidden">
+      <div class="sub" id="doneLine"></div>
+      <div style="height:12px"></div>
+      <button id="newPlan" class="ghost">새로 적기</button>
+    </div>
+  </section>
+
+  <!-- ② 가족 부탁 -->
+  <section class="card">
+    <h2>② 오는 길에 부탁하기</h2>
+    <div id="errandBlocked" class="sub">운전자가 출발하면 경로 근처 가게를 골라 부탁할 수 있어요.</div>
+    <div id="errandForm" class="hidden">
+      <div class="row">
+        <div style="width:36%"><label for="who">보내는 사람</label>
+          <select id="who"><option>배우자</option><option>아이</option><option>부모님</option><option>가족</option></select></div>
+        <div class="grow"><label for="item">무엇을</label><input id="item" placeholder="예: 아이 해열제" autocomplete="off"></div>
+      </div>
+      <label for="q">어디서 (경로 근처 가게)</label>
+      <input id="q" placeholder="약국, 편의점, 마트… 검색" autocomplete="off">
+      <div id="stores" class="stores"></div>
+      <div class="note" id="storeNote">'+분'은 들르면 늘어나는 거리로 계산한 대략적인 시간이에요. 운전자가 수락하면 실제 도착 시각을 바로 알려드려요.</div>
+      <div style="height:12px"></div>
+      <button id="sendErrand" class="teal" disabled>부탁 보내기</button>
+    </div>
+    <div id="errandList" style="margin-top:16px"></div>
+  </section>
+
+  <div class="note" style="text-align:center">운전자는 주행 중에 화면을 만지지 않아요. 부탁은 정차했을 때 한 번 눌러 수락하거나 거절해요.</div>
+</main>
+<div id="toast" class="toast" role="status"></div>
+
+<script>
+'use strict';
+/*
+ * 설정 (주소 뒤에 붙여요)
+ *   ?db=<데이터베이스 주소>  기본은 이 페이지를 보여준 중계 서버.
+ *                            Firebase면 https://<프로젝트>-default-rtdb.<지역>.firebasedatabase.app
+ *   ?trip=<운행 id>          기본 demo
+ */
+const params = new URLSearchParams(location.search);
+const DB = (params.get('db') || location.origin).replace(/\/$/, '');
+const TRIP = params.get('trip') || 'demo';
+const BASE = `${DB}/trips/${encodeURIComponent(TRIP)}`;
+const $ = id => document.getElementById(id);
+
+// ---------------- 실시간 DB (Firebase REST와 같은 방식) ----------------
+let state = {};
+function applyAt(path, data) {
+  const parts = path.split('/').filter(Boolean);
+  if (!parts.length) { state = data || {}; return; }
+  let n = state;
+  for (const k of parts.slice(0, -1)) { if (typeof n[k] !== 'object' || n[k] === null) n[k] = {}; n = n[k]; }
+  const last = parts[parts.length - 1];
+  if (data === null) delete n[last]; else n[last] = data;
+}
+function connect() {
+  const es = new EventSource(`${BASE}.json`);
+  const on = ok => { $('connText').textContent = ok ? '실시간 연결됨' : '다시 연결 중'; };
+  es.addEventListener('put', e => { const m = JSON.parse(e.data); applyAt(m.path, m.data); on(true); render(); });
+  es.addEventListener('patch', e => { const m = JSON.parse(e.data); for (const [k, v] of Object.entries(m.data || {})) applyAt(`${m.path.replace(/\/$/, '')}/${k}`, v); render(); });
+  es.addEventListener('keep-alive', () => on(true));
+  es.onerror = () => on(false);
+}
+async function api(method, path, body) {
+  try {
+    const r = await fetch(`${BASE}${path}.json`, { method, headers: { 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) });
+    if (!r.ok) throw new Error(await r.text());
+    return await r.json();
+  } catch (e) { toast('보내지 못했어요. 연결을 확인해 주세요'); throw e; }
+}
+
+// ---------------- 시간 (차 앱 시계 기준, 하루 중 초) ----------------
+const pad = n => String(n).padStart(2, '0');
+function clock(sec) { if (sec == null || isNaN(sec)) return '--:--'; const d = ((Math.round(sec) % 86400) + 86400) % 86400; return `${pad(Math.floor(d / 3600))}:${pad(Math.floor(d % 3600 / 60))}`; }
+const mins = sec => Math.max(0, Math.ceil(sec / 60));
+const nowSec = () => (state.trip && state.trip.clockSec != null ? state.trip.clockSec : null);
+
+// ---------------- 경로 근처 가게 ----------------
+// 지도 API 키를 연결하기 전 예시 목록. 카카오 장소 검색 + 길찾기(경유 시간)로 바꿀 자리.
+const SAMPLE_STORES = [
+  { name: '햇살약국', cat: '약국', f: .22, off: .6 }, { name: '길목편의점', cat: '편의점', f: .3, off: .3 },
+  { name: '초록마트', cat: '마트', f: .42, off: 1.6 }, { name: '모퉁이약국', cat: '약국', f: .52, off: 1.1 },
+  { name: '제철과일가게', cat: '과일', f: .6, off: .8 }, { name: '동네빵집', cat: '빵집', f: .68, off: .5 },
+  { name: '24시편의점', cat: '편의점', f: .76, off: .2 }, { name: '큰길약국', cat: '약국', f: .84, off: 2.4 },
+];
+// 들르면 늘어나는 거리 = (나→가게) + (가게→목적지) − (나→목적지). GPS 직선거리, 차 앱과 같은 계산
+function distKm(a, b) {
+  const R = 6371, r = x => x * Math.PI / 180, dLat = r(b.lat - a.lat), dLon = r(b.lon - a.lon);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(Math.min(1, h)));
+}
+function offRouteKm(me, p, dest) {
+  const kx = 111.32 * Math.cos(me.lat * Math.PI / 180), ky = 110.57;
+  const bx = (dest.lon - me.lon) * kx, by = (dest.lat - me.lat) * ky, px = (p.lon - me.lon) * kx, py = (p.lat - me.lat) * ky;
+  const len2 = bx * bx + by * by, t = len2 ? Math.min(1, Math.max(0, (px * bx + py * by) / len2)) : 0;
+  return Math.hypot(px - t * bx, py - t * by);
+}
+function detour(store) {
+  const t = state.trip; if (!t || !t.dest) return null;
+  const me = (t.shareOn !== false && t.pos) || t.origin; if (!me) return null;
+  // 직선 공식은 옆으로 벗어난 가게를 작게 잡아서, '경로 선에서의 거리 × 2'(들어갔다 나오기)와 비교해 큰 값 사용
+  const km = Math.max(0, distKm(me, store) + distKm(store, t.dest) - distKm(me, t.dest), 2 * offRouteKm(me, store, t.dest));
+  const limit = t.autoRejectKm;
+  return { km: Math.round(km * 10) / 10, min: 2 + Math.round(km / 30 * 60), far: limit != null && km > limit, limit };
+}
+const fmtKm = k => (Number.isInteger(k) ? String(k) : k.toFixed(1));
+function progressOf(t) { return t && t.totalSec ? Math.min(1, Math.max(0, 1 - (t.remainSec || 0) / t.totalSec)) : 0; }
+function storeCandidates() {
+  const t = state.trip; if (!t || !t.origin || !t.dest) return [];
+  const p = progressOf(t);
+  const a = t.origin, b = t.dest, kmLat = 111, kmLon = 111 * Math.cos(a.lat * Math.PI / 180);
+  const dx = (b.lon - a.lon) * kmLon, dy = (b.lat - a.lat) * kmLat, len = Math.hypot(dx, dy) || 1;
+  const nx = -dy / len, ny = dx / len; // 경로에 수직인 방향
+  return SAMPLE_STORES.filter(s => s.f > p + .03).map((s, i) => {
+    const side = i % 2 ? 1 : -1;
+    const c = {
+      name: s.name, cat: s.cat, f: s.f, address: `${b.name} 가는 길 근처 (예시 가게)`,
+      lat: a.lat + (b.lat - a.lat) * s.f + side * ny * s.off / kmLat,
+      lon: a.lon + (b.lon - a.lon) * s.f + side * nx * s.off / kmLon,
+    };
+    const d = detour(c) || { km: 0, min: 2, far: false };
+    return Object.assign(c, { extraKm: d.km, extraMin: d.min, far: d.far, limit: d.limit });
+  }).sort((x, y) => x.extraKm - y.extraKm);
+}
+
+// ---------------- 지도 (간단한 경로 그림) ----------------
+function drawMap() {
+  const t = state.trip, svg = $('map'); if (!t || !t.origin || !t.dest) { svg.innerHTML = ''; return; }
+  const accepted = Object.values(state.errands || {}).filter(e => e.store && e.status === 'ACCEPTED').map(e => e.store);
+  const cands = storeCandidates();
+  const showCar = t.shareOn !== false && t.pos;
+  const pts = [t.origin, t.dest, showCar ? t.pos : null, ...accepted, ...cands, selectedStore].filter(p => p && p.lat != null);
+  const minLat = Math.min(...pts.map(p => p.lat)), maxLat = Math.max(...pts.map(p => p.lat));
+  const minLon = Math.min(...pts.map(p => p.lon)), maxLon = Math.max(...pts.map(p => p.lon));
+  const W = 360, H = 210, P = 30, kx = Math.cos(minLat * Math.PI / 180);
+  const spanX = Math.max((maxLon - minLon) * kx, 1e-4), spanY = Math.max(maxLat - minLat, 1e-4);
+  const s = Math.min((W - 2 * P) / spanX, (H - 2 * P) / spanY);
+  const ox = (W - spanX * s) / 2, oy = (H - spanY * s) / 2;
+  const X = p => ox + (p.lon - minLon) * kx * s, Y = p => H - (oy + (p.lat - minLat) * s);
+  const route = [t.origin, ...accepted.slice().sort((a, b) => (a.f || 0) - (b.f || 0)), t.dest];
+  const poly = route.map(p => `${X(p).toFixed(1)},${Y(p).toFixed(1)}`).join(' ');
+  const side = p => (X(p) > W * .62 ? 'end' : 'start');
+  const pin = (p, fill, label) => { const end = side(p) === 'end'; return `<circle cx="${X(p)}" cy="${Y(p)}" r="7" style="fill:${fill};stroke:var(--pin-ring)" stroke-width="2"/><text x="${X(p) + (end ? -11 : 11)}" y="${Y(p) + 4}" font-size="11.5" font-weight="700" style="fill:var(--map-ink)" text-anchor="${end ? 'end' : 'start'}">${esc(label)}</text>`; };
+  svg.innerHTML =
+    `<polyline points="${poly}" fill="none" style="stroke:var(--map-road)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>` +
+    `<polyline points="${poly}" fill="none" style="stroke:var(--map-ink)" stroke-width="2" stroke-dasharray="1 7" stroke-linecap="round"/>` +
+    cands.map(c => `<circle cx="${X(c)}" cy="${Y(c)}" r="3.5" style="fill:var(--cand)" opacity=".45"/>`).join('') +
+    (selectedStore ? `<circle cx="${X(selectedStore)}" cy="${Y(selectedStore)}" r="9" fill="none" style="stroke:var(--teal)" stroke-width="2.5" stroke-dasharray="3 2"/>` : '') +
+    pin(t.origin, 'var(--map-start)', t.origin.name || '출발') + pin(t.dest, 'var(--map-ink)', t.dest.name || '도착') +
+    accepted.map(p => pin(p, 'var(--teal)', p.name)).join('') +
+    (showCar ? `<g transform="translate(${X(t.pos).toFixed(1)},${Y(t.pos).toFixed(1)})"><circle r="11" fill="#FFB547" style="stroke:var(--pin-ring)" stroke-width="2.5"/><path d="M-6,2 L-4,-3 Q-3.5,-4.5 -2,-4.5 H2 Q3.5,-4.5 4,-3 L6,2 V4 H-6 Z" fill="#1A2029"/></g>` : '');
+}
+
+// ---------------- 그리기 ----------------
+let selectedStore = null, lastOrderStatus = undefined;
+function render() {
+  const t = state.trip, now = nowSec();
+  const hasTrip = !!(t && t.dest), driving = hasTrip && t.status === 'driving';
+
+  // 운전자
+  $('tripEmpty').classList.toggle('hidden', hasTrip);
+  $('tripBody').classList.toggle('hidden', !hasTrip);
+  const tag = $('tripTag');
+  if (!hasTrip) { tag.textContent = '출발 전'; tag.className = 'tag'; }
+  else if (t.status === 'arrived') { tag.textContent = '도착'; tag.className = 'tag green'; }
+  else { tag.textContent = t.parked ? '정차 중' : '운전 중'; tag.className = 'tag amber'; }
+  if (hasTrip) {
+    const arrived = t.status === 'arrived';
+    $('destLine').textContent = arrived ? `${t.dest.name}에 도착했어요` : `${t.dest.name}(으)로 가는 중${t.waypointCount ? `, 경유 ${t.waypointCount}곳` : ''}`;
+    $('arrival').textContent = arrived ? '도착!' : `${clock(t.arrivalClockSec)} 도착`;
+    $('remain').textContent = arrived ? '0분' : `${mins(t.remainSec || 0)}분`;
+    const pr = arrived ? 1 : progressOf(t), pct = Math.round(pr * 100);
+    $('progFill').style.transform = `scaleX(${pct / 100})`; $('progBar').setAttribute('aria-valuenow', pct);
+    $('progFrom').textContent = (t.origin && t.origin.name) || '출발'; $('progTo').textContent = `${t.dest.name} ${pct}%`;
+    $('mapNote').textContent = t.shareOn === false ? '운전자가 현재 위치 공유를 껐어요. 도착 시각만 보여요.' : '출발지, 현재 위치, 목적지를 잇는 대략적인 그림이에요. 실제 길은 차 내비가 안내해요.';
+  }
+  drawMap();
+
+  // ① 배달 타이밍
+  const o = state.order;
+  const show = id => ['orderForm', 'orderPlanned', 'orderAlert', 'orderOrdered', 'orderDone'].forEach(x => $(x).classList.toggle('hidden', x !== id));
+  const otag = $('orderTag');
+  $('orderCard').classList.toggle('alert', !!(o && o.status === 'ALERTED'));
+  if (!o) { show('orderForm'); otag.textContent = '설정 전'; otag.className = 'tag'; updateLearned(); }
+  else if (o.status === 'PLANNED') {
+    show('orderPlanned'); otag.textContent = '알림 대기'; otag.className = 'tag amber';
+    $('planLine').textContent = `${o.store}에서 ${o.menu}, 보통 ${o.deliveryMin}분`;
+    if (o.orderAtClockSec != null && now != null && driving) {
+      $('alertAt').textContent = `${clock(o.orderAtClockSec)}에 알려드려요`;
+      $('alertIn').textContent = `${mins(o.orderAtClockSec - now)}분 뒤 알려요. 운전자는 ${clock(t.arrivalClockSec)} 도착 예정이에요.`;
+    } else {
+      $('alertAt').textContent = '출발하면 계산해요';
+      $('alertIn').textContent = '운전자가 내비 목적지를 정하고 출발하면 알림 시각이 정해져요.';
+    }
+  } else if (o.status === 'ALERTED') {
+    show('orderAlert'); otag.textContent = '지금 주문'; otag.className = 'tag amber';
+    const food = now != null ? now + o.deliveryMin * 60 : null;
+    $('alertWhy').textContent = `지금 주문하면 ${clock(food)}쯤 도착해요. 운전자는 ${clock(t && t.arrivalClockSec)} 도착 예정이에요.`;
+    $('alertMenu').textContent = `${o.menu}${o.store ? ` (${o.store})` : ''}`;
+    if (lastOrderStatus !== undefined && lastOrderStatus !== 'ALERTED') ring(o);
+  } else if (o.status === 'ORDERED') {
+    show('orderOrdered'); otag.textContent = '주문 완료'; otag.className = 'tag teal';
+    $('tOrdered').textContent = clock(o.orderedClockSec);
+    $('tDriver').textContent = t && t.status === 'arrived' ? '도착' : clock(t && t.arrivalClockSec);
+    $('tFood').textContent = clock(o.foodArrivalClockSec);
+    const late = o.lateMin > 0;
+    $('lateLine').textContent = late ? `길이 막혀 운전자가 음식보다 약 ${o.lateMin}분 늦어요. 음식을 먼저 받아 주세요.` : '운전자가 음식보다 조금 먼저 도착할 예정이에요.';
+    $('lateLine').style.color = late ? 'var(--coral)' : '';
+  } else {
+    show('orderDone'); otag.textContent = '완료'; otag.className = 'tag green';
+    $('doneLine').textContent = o.actualMin ? `실제로 ${o.actualMin}분 걸렸어요. 다음엔 ${o.store}을(를) ${o.actualMin}분으로 맞출게요.` : '기록했어요.';
+  }
+  lastOrderStatus = o ? o.status : null;
+
+  // ② 부탁
+  $('errandBlocked').classList.toggle('hidden', driving);
+  $('errandForm').classList.toggle('hidden', !driving);
+  const lim = t && t.autoRejectKm;
+  $('storeNote').textContent = `'+분'은 들르면 늘어나는 거리로 계산한 대략적인 시간이에요.${lim != null ? ` 들르면 ${fmtKm(lim)}km 넘게 늘어나는 가게는 운전자 설정에 따라 자동으로 거절돼요.` : ''} 수락되면 실제 도착 시각을 바로 알려드려요.`;
+  renderStores();
+  renderErrands();
+}
+
+const storeKey = s => (s || '').trim().replace(/[.#$\[\]\/\s]+/g, '_');
+function updateLearned() {
+  const name = $('shop').value.trim(); const learned = state.learned && state.learned[storeKey(name)];
+  $('learnedNote').textContent = learned ? `지난번 ${name}은(는) 실제로 ${learned}분 걸렸어요.` : '';
+}
+
+let lastStoreSig = '';
+function renderStores() {
+  const q = $('q').value.trim();
+  const list = storeCandidates().filter(s => !q || s.name.includes(q) || s.cat.includes(q));
+  if (selectedStore && !list.some(s => s.name === selectedStore.name)) selectedStore = null;
+  const sig = JSON.stringify([q, list.map(s => s.name + s.extraKm + s.far), selectedStore && selectedStore.name]);
+  if (sig === lastStoreSig) return; lastStoreSig = sig;
+  const box = $('stores'); box.innerHTML = '';
+  if (q && !list.length) box.innerHTML = `<div class="sub">경로 근처에 '${esc(q)}'이(가) 없어요. 다른 말로 찾아보세요.</div>`;
+  list.forEach(s => {
+    const b = document.createElement('button');
+    const sel = !!(selectedStore && selectedStore.name === s.name);
+    b.type = 'button'; b.setAttribute('aria-pressed', sel); if (s.far) b.setAttribute('aria-disabled', 'true');
+    b.className = 'store' + (selectedStore && selectedStore.name === s.name ? ' sel' : '') + (s.far ? ' far' : '');
+    b.innerHTML = s.far
+      ? `<span class="chk" aria-hidden="true"></span><div class="grow"><b>${esc(s.name)}</b><small>경로에서 너무 멀어 자동 거절돼요 (기준 ${fmtKm(s.limit)}km)</small></div><span class="plus">+${fmtKm(s.extraKm)}km<small>자동 거절</small></span>`
+      : `<span class="chk" aria-hidden="true">${sel ? CHECK : ''}</span><div class="grow"><b>${esc(s.name)}</b><small>${esc(s.cat)}, ${esc(s.address)}</small></div><span class="plus">+${s.extraMin}분<small>+${fmtKm(s.extraKm)}km</small></span>`;
+    b.onclick = () => { if (s.far) { toast(`들르면 ${fmtKm(s.extraKm)}km 늘어나서 자동으로 거절돼요`); return; } selectedStore = s; lastStoreSig = ''; renderStores(); drawMap(); checkSend(); };
+    box.appendChild(b);
+  });
+  checkSend();
+}
+function checkSend() { $('sendErrand').disabled = !($('item').value.trim() && selectedStore); }
+
+function renderErrands() {
+  const t = state.trip;
+  const list = Object.values(state.errands || {}).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  $('errandList').innerHTML = list.map(e => {
+    let tag = '<span class="tag">보냄</span>', line = '운전자가 정차하면 확인해요. 운전 중에는 알림만 보여요.';
+    if (e.status === 'ACCEPTED') { tag = t && t.status === 'arrived' ? '<span class="tag green">완료</span>' : '<span class="tag teal">수락</span>'; line = t && t.status === 'arrived' ? `${e.store.name}에 들러서 도착했어요.` : `${e.store.name} 들러서 ${clock(t && t.arrivalClockSec)} 도착 예정이에요.`; }
+    if (e.status === 'REJECTED') { tag = '<span class="tag coral">어려워요</span>'; line = e.autoRejected ? `경로에서 너무 멀어 자동으로 거절됐어요 (들르면 +${fmtKm(e.extraKm)}km, 기준 ${fmtKm(e.limitKm)}km).` : '이번엔 들르기 어렵대요.'; }
+    const extra = e.carExtraMin != null ? `+${e.carExtraMin}분, +${fmtKm(e.extraKm)}km` : `+${e.extraMin}분`;
+    return `<div class="errand"><div class="row"><b class="grow">${esc(e.item)}</b>${tag}</div><div class="sub">${esc(e.from)}의 부탁, ${esc(e.store ? e.store.name : '')} (${extra})</div><div class="sub" style="color:var(--ink);margin-top:4px">${line}</div></div>`;
+  }).join('');
+}
+const CHECK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+
+// ---------------- 알림 (소리·진동·시스템 알림) ----------------
+let audioCtx = null;
+$('enableAlerts').onclick = async () => {
+  try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); await audioCtx.resume(); beep(1); } catch (e) {}
+  try { if ('Notification' in window && Notification.permission === 'default') await Notification.requestPermission(); } catch (e) {}
+  $('notifyBanner').classList.add('hidden'); toast('알림을 켰어요. 이 페이지를 열어 두세요');
+};
+function beep(times) {
+  if (!audioCtx) return;
+  for (let i = 0; i < times; i++) {
+    const osc = audioCtx.createOscillator(), g = audioCtx.createGain(), t0 = audioCtx.currentTime + i * .45;
+    osc.frequency.value = i % 2 ? 660 : 880; osc.connect(g); g.connect(audioCtx.destination);
+    g.gain.setValueAtTime(.0001, t0); g.gain.exponentialRampToValueAtTime(.4, t0 + .03); g.gain.exponentialRampToValueAtTime(.0001, t0 + .35);
+    osc.start(t0); osc.stop(t0 + .4);
+  }
+}
+function ring(o) {
+  beep(6);
+  try { navigator.vibrate && navigator.vibrate([300, 150, 300, 150, 600]); } catch (e) {}
+  try { if ('Notification' in window && Notification.permission === 'granted') new Notification('지금 주문하세요', { body: `${o.menu}, 지금 주문하면 도착에 딱 맞아요`, icon: 'icon.svg', tag: 'order' }); } catch (e) {}
+  let n = 0; const base = '오는 길에 (가족 화면)';
+  const iv = setInterval(() => { document.title = n++ % 2 ? base : '(!) 지금 주문하세요'; if (n > 20 || !state.order || state.order.status !== 'ALERTED') { clearInterval(iv); document.title = base; } }, 800);
+  $('orderCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+// 보내는 동안 버튼을 잠그고 '보내는 중…'으로 바꿔 두 번 눌리지 않게
+async function busy(btn, fn) {
+  if (btn.getAttribute('aria-busy') === 'true') return;
+  const label = btn.textContent; btn.setAttribute('aria-busy', 'true'); btn.disabled = true; btn.textContent = '보내는 중…';
+  try { await fn(); } catch (e) {} finally { btn.removeAttribute('aria-busy'); btn.disabled = false; btn.textContent = label; }
+}
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove('on'), 2600); }
+
+// ---------------- 버튼 ----------------
+$('shop').addEventListener('input', () => {
+  updateLearned(); const learned = state.learned && state.learned[storeKey($('shop').value)]; if (learned) $('dmin').value = learned;
+});
+function menuError(on) { $('menuErr').classList.toggle('hidden', !on); $('menu').setAttribute('aria-invalid', on ? 'true' : 'false'); }
+$('menu').addEventListener('input', () => { if ($('menu').value.trim()) menuError(false); });
+$('savePlan').onclick = () => {
+  const menu = $('menu').value.trim(), store = $('shop').value.trim();
+  const deliveryMin = Math.max(5, Math.min(120, parseInt($('dmin').value, 10) || 40));
+  const bufferMin = Math.max(0, Math.min(20, parseInt($('bmin').value, 10) || 0));
+  if (!menu) { menuError(true); $('menu').focus(); return; }
+  menuError(false);
+  return busy($('savePlan'), async () => {
+    await api('PUT', '/order', { menu, store: store || '자주 시키는 가게', deliveryMin, bufferMin, by: 'family', status: 'PLANNED', createdAt: Date.now() });
+    toast('운전자 도착에 맞춰 알려드릴게요');
+  });
+};
+$('cancelPlan').onclick = () => api('DELETE', '/order');
+$('newPlan').onclick = () => api('DELETE', '/order');
+$('ordered').onclick = () => busy($('ordered'), async () => {
+  const o = state.order, now = nowSec(); if (!o || now == null) return;
+  await api('PATCH', '/order', { status: 'ORDERED', orderedClockSec: now, foodArrivalClockSec: now + o.deliveryMin * 60 });
+  toast('주문 시각을 운전자 쪽에 알렸어요');
+});
+$('foodArrived').onclick = () => busy($('foodArrived'), async () => {
+  const o = state.order, now = nowSec(); if (!o) return;
+  const actualMin = now != null && o.orderedClockSec != null ? Math.max(1, Math.round((now - o.orderedClockSec) / 60)) : null;
+  const patch = { 'order/status': 'ARRIVED', 'order/actualMin': actualMin };
+  if (actualMin) patch[`learned/${storeKey(o.store)}`] = actualMin;
+  await api('PATCH', '', patch);
+});
+$('item').addEventListener('input', checkSend);
+$('q').addEventListener('input', () => { lastStoreSig = ''; renderStores(); });
+$('sendErrand').onclick = () => busy($('sendErrand'), async () => {
+  const s = selectedStore; if (!s) return;
+  await api('POST', '/errands', {
+    from: $('who').value, item: $('item').value.trim(), extraMin: s.extraMin, status: 'NEW', createdAt: Date.now(), sentClockSec: nowSec(),
+    store: { name: s.name, address: s.address, lat: s.lat, lon: s.lon, f: s.f },
+  });
+  $('item').value = ''; selectedStore = null; lastStoreSig = ''; renderStores(); drawMap();
+  toast('보냈어요. 운전자가 정차하면 확인해요');
+}).then(checkSend);
+if (!('Notification' in window) && !(window.AudioContext || window.webkitAudioContext)) $('notifyBanner').classList.add('hidden');
+
+connect();
+render();
+</script>
+</body>
+</html>
