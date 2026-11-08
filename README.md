@@ -14,7 +14,7 @@
 ## 바로 써 보기
 
 - **가족 화면**: https://pscwww.github.io/ontheway/web/ (공모전용 Firebase에 연결)
-- **차 앱**: [Releases](https://github.com/pscwww/ontheway/releases)의 APK를 Pleos Connect 에뮬레이터에 설치하면 같은 Firebase에 붙어요.
+- **차 앱**: [`apk/parkseongcheol_ontheway_release.apk`](apk/parkseongcheol_ontheway_release.apk)를 Pleos Connect 에뮬레이터에 설치하면 같은 Firebase에 붙어요.
   오른쪽 데모 패널에서 "출발"을 누르면 가족 화면에 도착 시각이 떠요.
 
 ## 실행 방법 (PC 중계 서버로 시연할 때)
