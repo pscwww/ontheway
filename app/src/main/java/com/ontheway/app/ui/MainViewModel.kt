@@ -527,8 +527,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     companion object {
-        /** 에뮬레이터에서 본 PC의 중계 서버 주소. Firebase를 쓰면 https://<프로젝트>-default-rtdb.<지역>.firebasedatabase.app */
-        const val DEFAULT_SYNC_URL = "http://10.0.2.2:8787"
+        /** 기본 연결: 공모전용 Firebase Realtime Database. PC 중계 서버로 시연할 때는 데모 패널에서 http://10.0.2.2:8787 입력 */
+        const val DEFAULT_SYNC_URL = "https://ontheway-fb67a-default-rtdb.asia-southeast1.firebasedatabase.app"
     }
 }
 

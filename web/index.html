@@ -247,12 +247,12 @@ input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-
 'use strict';
 /*
  * 설정 (주소 뒤에 붙여요)
- *   ?db=<데이터베이스 주소>  기본은 이 페이지를 보여준 중계 서버.
- *                            Firebase면 https://<프로젝트>-default-rtdb.<지역>.firebasedatabase.app
+ *   ?db=<데이터베이스 주소>  PC 중계 서버(포트 8787)가 보여준 페이지면 그 서버, 그 밖에는 공모전용 Firebase.
  *   ?trip=<운행 id>          기본 demo
  */
+const FIREBASE_DB = 'https://ontheway-fb67a-default-rtdb.asia-southeast1.firebasedatabase.app';
 const params = new URLSearchParams(location.search);
-const DB = (params.get('db') || location.origin).replace(/\/$/, '');
+const DB = (params.get('db') || (location.port === '8787' ? location.origin : FIREBASE_DB)).replace(/\/$/, '');
 const TRIP = params.get('trip') || 'demo';
 const BASE = `${DB}/trips/${encodeURIComponent(TRIP)}`;
 const $ = id => document.getElementById(id);
